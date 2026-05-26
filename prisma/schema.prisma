@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  RECEPTIONIST
+  DOCTOR
+  NURSE
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  MISSED
+}
+
+enum SMSStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+}
+
+enum ReminderType {
+  APPOINTMENT
+  MEDICATION
+  VACCINATION
+  ANTENATAL
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  fullName  String
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Patient {
+  id           Int           @id @default(autoincrement())
+  fullName     String
+  gender       String
+  phoneNumber  String
+  address      String?
+  dateOfBirth  DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  appointments Appointment[]
+  smsLogs      SMSLog[]
+}
+
+model Appointment {
+  id              Int               @id @default(autoincrement())
+  patientId       Int
+  patient         Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorName      String
+  appointmentDate DateTime
+  status          AppointmentStatus @default(SCHEDULED)
+  reminderSent    Boolean           @default(false)
+  notes           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model SMSLog {
+  id             Int          @id @default(autoincrement())
+  patientId      Int
+  patient        Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  message        String
+  phoneNumber    String
+  reminderType   ReminderType @default(APPOINTMENT)
+  deliveryStatus SMSStatus    @default(PENDING)
+  sentAt         DateTime     @default(now())
+}
